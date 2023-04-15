@@ -6,7 +6,7 @@
 ## requirements to run project
 * `programing language golang`
 
-## run proyect
+## run project
 1. clone this repository and execute the next commands `inside project`:
 2. **go mod tidy**
 3. **go run main.go**
