@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// declare custom types
 type (
 	HostnameType            string
 	ManufacturerType        string
@@ -16,18 +17,21 @@ type (
 	TotalPhysicalMemoryType float64
 )
 
+// ComputerSystem is model to load information Computer system
 type ComputerSystem struct {
-	Hostname             HostnameType            `json:"hostname,omitempty"`
-	Manufacturer         ManufacturerType        `json:"manufacturer,omitempty"`
-	Model                ModelType               `json:"model,omitempty"`
-	System               SystemType              `json:"system,omitempty"`
-	TotalPhysicalMemory  TotalPhysicalMemoryType `json:"total_physical_memory,omitempty"`
+	Hostname            HostnameType            `json:"hostname,omitempty"`
+	Manufacturer        ManufacturerType        `json:"manufacturer,omitempty"`
+	Model               ModelType               `json:"model,omitempty"`
+	System              SystemType              `json:"system,omitempty"`
+	TotalPhysicalMemory TotalPhysicalMemoryType `json:"total_physical_memory,omitempty"`
+
 	infoSystemChan       chan interface{}
 	signalChan           chan struct{}
 	signalNumberToFinish int
 	exc                  Executor
 }
 
+// MB is size in bytes
 const MB int = 1073741824
 
 func NewComputerSystem(executor Executor) *ComputerSystem {
