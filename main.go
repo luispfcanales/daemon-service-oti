@@ -1,17 +1,16 @@
 package main
 
 import (
-	"github.com/luispfcanales/daemon-service-oti/entity"
+	"github.com/luispfcanales/daemon-service-oti/gui"
 )
 
 func main() {
-	c := entity.NewCommand()
+	//c := entity.NewCommand()
 
-	compSystem := entity.NewComputerSystem(c) //-> ready to load
-	cpuSys := entity.NewCPUSystem(c)          //-> ready to load
+	//compSystem := entity.NewComputerSystem(c)
+	//cpuSys := entity.NewCPUSystem(c)
 	//disk := entity.NewPhysicalDisk(c)
 
-	entity.NewSystemDescriptor().Run(compSystem, cpuSys)
 	//entity.NewSystemDescriptor().Run(compSystem, cpuSys, disk)
-	//entity.NewSystemDescriptor().Run(cpuSys)
+	gui.Run()
 }

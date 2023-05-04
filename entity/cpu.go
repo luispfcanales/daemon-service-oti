@@ -24,20 +24,20 @@ type CPUSystem struct {
 	Cores             CPU_NUMBER_CORES_TYPE       `json:"cores,omitempty"`
 	LogicalProcessors CPU_LOGICAL_PROCESSORS_TYPE `json:"logical_processors,omitempty"`
 
-	mailBox          chan interface{} //
-	signalSTOP       chan struct{}    // stop actor
-	signalProcessEND chan struct{}    // stop load information process
-	numberToFinish   int
-	exc              Executor
+	mailBox        chan interface{} //
+	STOP_ACTOR     chan struct{}    // stop actor
+	PROCESS_END    chan struct{}    // stop load information process
+	numberToFinish int
+	exc            Executor
 }
 
 // NewCPUSystem return instance of CPUSystem
 func NewCPUSystem(executor Executor) *CPUSystem {
 	CPU := &CPUSystem{
-		exc:              executor,
-		mailBox:          make(chan interface{}, 10),
-		signalSTOP:       make(chan struct{}, 1),
-		signalProcessEND: make(chan struct{}),
+		exc:         executor,
+		mailBox:     make(chan interface{}, 10),
+		STOP_ACTOR:  make(chan struct{}, 1),
+		PROCESS_END: make(chan struct{}),
 	}
 	return CPU
 }
@@ -50,15 +50,15 @@ ActorLoop:
 			switch value := valueType.(type) {
 			case CPU_NAME_TYPE:
 				cs.Name = value
-				cs.signalProcessEND <- struct{}{}
+				cs.PROCESS_END <- struct{}{}
 			case CPU_NUMBER_CORES_TYPE:
 				cs.Cores = value
-				cs.signalProcessEND <- struct{}{}
+				cs.PROCESS_END <- struct{}{}
 			case CPU_LOGICAL_PROCESSORS_TYPE:
 				cs.LogicalProcessors = value
-				cs.signalProcessEND <- struct{}{}
+				cs.PROCESS_END <- struct{}{}
 			}
-		case <-cs.signalSTOP:
+		case <-cs.STOP_ACTOR:
 			break ActorLoop
 		}
 	}
@@ -70,12 +70,12 @@ func (cs *CPUSystem) stop() {
 ActorStop:
 	for {
 		select {
-		case <-cs.signalProcessEND:
+		case <-cs.PROCESS_END:
 			counter++
 			if counter == cs.numberToFinish {
-				cs.signalSTOP <- struct{}{}
-				close(cs.signalProcessEND)
-				close(cs.signalSTOP)
+				cs.STOP_ACTOR <- struct{}{}
+				close(cs.PROCESS_END)
+				close(cs.STOP_ACTOR)
 				break ActorStop
 			}
 		}

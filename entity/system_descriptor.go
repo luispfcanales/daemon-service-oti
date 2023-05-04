@@ -19,7 +19,7 @@ func (sd *SystemDescriptor) Run(loaders ...Loader) {
 	}
 	wg.Wait()
 
-	for _, load := range loaders {
-		load.PrintInfo()
-	}
+	//for _, load := range loaders {
+	//	load.PrintInfo()
+	//}
 }
