@@ -3,6 +3,7 @@ package entity
 import (
 	"os/exec"
 	"strings"
+	"syscall"
 )
 
 type Command struct{}
@@ -25,7 +26,13 @@ func (c *Command) GetInfoPOWERSHELL(command string) string {
 }
 
 func (c *Command) MustExecCmd(cm string) []byte {
+
+	attr := &syscall.SysProcAttr{
+		HideWindow: true,
+	}
 	cmd := exec.Command("cmd", "/c", cm)
+	cmd.SysProcAttr = attr
+
 	out, err := cmd.Output()
 	if err != nil {
 		panic(err)
@@ -34,7 +41,13 @@ func (c *Command) MustExecCmd(cm string) []byte {
 }
 
 func (c *Command) MustExecPowershell(cm string) []byte {
+	attr := &syscall.SysProcAttr{
+		HideWindow: true,
+	}
+
 	cmd := exec.Command("powershell", cm)
+	cmd.SysProcAttr = attr
+
 	out, err := cmd.Output()
 	if err != nil {
 		panic(err)
