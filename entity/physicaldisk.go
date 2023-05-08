@@ -3,7 +3,6 @@ package entity
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -101,24 +100,32 @@ func (p *PhysicalDisk) Prueba() {
 func (p *PhysicalDisk) Get(option string) {
 	switch option {
 	case PD_SIZE:
-		query_cmd := fmt.Sprintf("wmic diskdrive get %s /FORMAT:csv", option)
-		values := p.exc.GetInfoCMD(query_cmd)
-
-		s, _ := strconv.Atoi(values[1])
-		sizeConvert := s / GB
-
-		p.mailBox <- PD_SIZE_TYPE(fmt.Sprintf("%d GB", sizeConvert))
+		p.mailBox <- PD_SIZE_TYPE(p.getDiskSizeWithPSHELL())
 	case PD_MEDIATYPE:
 		p.mailBox <- PD_MEDIA_TYPE(p.getMediaTypeWithPSHELL())
 	}
 }
 
 func (p *PhysicalDisk) getMediaTypeWithPSHELL() string {
+	disks := []string{"HDD", "SSD"}
 	body := p.exc.GetInfoPOWERSHELL("get-physicaldisk")
-	rows := strings.SplitAfter(body, "\n")
-	line := strings.Split(rows[3], "\n")
-	value := strings.Fields(line[0])
-	return value[4]
+	data := strings.Fields(body)
+
+	for i, value := range data {
+		if disks[0] == value || disks[1] == value {
+			return data[i]
+		}
+	}
+
+	return ""
+}
+
+func (p *PhysicalDisk) getDiskSizeWithPSHELL() string {
+	body := p.exc.GetInfoPOWERSHELL("get-disk")
+	data := strings.Fields(body)
+
+	size := len(data) - 3
+	return data[size] + " GB"
 }
 func (p *PhysicalDisk) PrintInfo() {
 	fmt.Printf("MediaType\t: %s\n", p.MediaType)

@@ -46,7 +46,8 @@ func (pc *ComputerSystem) WorkerLoadInfo(wg *sync.WaitGroup) {
 	defer wg.Done()
 	loaders := []string{"Manufacturer", "model", "systemtype", "TotalPhysicalMemory"}
 
-	sizeLoaders := len(loaders)
+	//sizeLoaders increment 1 by hostname
+	sizeLoaders := len(loaders) + 1
 
 	for _, value := range loaders {
 		go pc.GetInfo(value, pc.infoSystemChan)
@@ -59,6 +60,9 @@ workerSystem:
 			break workerSystem
 		case valueType := <-pc.infoSystemChan:
 			switch value := valueType.(type) {
+			case HostnameType:
+				pc.Hostname = value
+				pc.sendSignalFinish(sizeLoaders)
 			case ManufacturerType:
 				pc.Manufacturer = value
 				pc.sendSignalFinish(sizeLoaders)
@@ -92,6 +96,7 @@ func (pc *ComputerSystem) GetInfo(option string, sender chan<- interface{}) {
 	switch option {
 	case "Manufacturer":
 		sender <- ManufacturerType(values[1])
+		sender <- HostnameType(values[0])
 	case "model":
 		sender <- ModelType(values[1])
 	case "systemtype":

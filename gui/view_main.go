@@ -72,11 +72,17 @@ func Run() {
 
 	btnLoad := widget.NewButtonWithIcon("Cargar Info.", theme.MediaReplayIcon(), func() {
 		c := entity.NewCommand()
+
 		compSystem := entity.NewComputerSystem(c)
 		cpuSys := entity.NewCPUSystem(c)
 		disk := entity.NewPhysicalDisk(c)
-		entity.NewSystemDescriptor().Run(compSystem, cpuSys, disk)
+		bios := entity.NewBios(c)
 
+		entity.NewSystemDescriptor().Run(compSystem, cpuSys, disk, bios)
+
+		strBIOS.Set(string(bios.SerialNumber))
+
+		strHOSTNAME.Set(string(compSystem.Hostname))
 		strFACTURER.Set(string(compSystem.Manufacturer))
 		strMODEL.Set(string(compSystem.Model))
 		strARCHITECTURE.Set(string(compSystem.System))
