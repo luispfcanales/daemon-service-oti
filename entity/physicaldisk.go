@@ -121,11 +121,19 @@ func (p *PhysicalDisk) getMediaTypeWithPSHELL() string {
 }
 
 func (p *PhysicalDisk) getDiskSizeWithPSHELL() string {
+	var value string
+	var afterValue string = "Online"
+
 	body := p.exc.GetInfoPOWERSHELL("get-disk")
 	data := strings.Fields(body)
 
-	size := len(data) - 3
-	return data[size] + " GB"
+	for i, v := range data {
+		if v == afterValue {
+			value = data[i+1]
+			break
+		}
+	}
+	return value + " GB"
 }
 func (p *PhysicalDisk) PrintInfo() {
 	fmt.Printf("MediaType\t: %s\n", p.MediaType)

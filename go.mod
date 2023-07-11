@@ -2,7 +2,10 @@ module github.com/luispfcanales/daemon-service-oti
 
 go 1.20
 
-require fyne.io/fyne/v2 v2.3.3
+require (
+	fyne.io/fyne/v2 v2.3.3
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+)
 
 require (
 	fyne.io/systray v1.10.1-0.20230312215936-7f71b037e260 // indirect

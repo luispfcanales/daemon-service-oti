@@ -8,10 +8,13 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/luispfcanales/daemon-service-oti/entity"
+	"github.com/luispfcanales/daemon-service-oti/gui/textbox"
+	"github.com/luispfcanales/daemon-service-oti/model"
+	"github.com/luispfcanales/daemon-service-oti/services/post"
 )
 
 const (
@@ -30,47 +33,50 @@ func Run() {
 	w.CenterOnScreen()
 
 	//txt bindings
-	strBIOS := binding.NewString()
-	entryBIOS := textEntry(WIDTH_ENTRY, strBIOS)
-	entryBIOS.Move(fyne.NewPos(62, 0))
-
-	strHOSTNAME := binding.NewString()
-	entryHOSTNAME := textEntry(WIDTH_ENTRY, strHOSTNAME)
-	strFACTURER := binding.NewString()
-	entryFACTURER := textEntry(WIDTH_ENTRY, strFACTURER)
-	entryFACTURER.Move(fyne.NewPos(32, 0))
-	strMODEL := binding.NewString()
-	entryMODEL := textEntry(WIDTH_ENTRY, strMODEL)
-	entryMODEL.Move(fyne.NewPos(50, 0))
-	strARCHITECTURE := binding.NewString()
-	entryARCHITECTURE := textEntry(WIDTH_ENTRY, strARCHITECTURE)
-	entryARCHITECTURE.Move(fyne.NewPos(20, 0))
-	strRAM := binding.NewString()
-	entryRAM := textEntry(LEFT_WIDTH_ENTRY, strRAM)
-	entryRAM.Move(fyne.NewPos(69, 0))
-
-	strPROCESSOR := binding.NewString()
-	entryPROCESSOR := textEntry(WIDTH_ENTRY, strPROCESSOR)
-	entryPROCESSOR.Move(fyne.NewPos(27, 0))
-	strCORE := binding.NewString()
-	entryCORE := textEntry(LEFT_WIDTH_ENTRY, strCORE)
-	entryCORE.Move(fyne.NewPos(47, 0))
-	strLOGIC_CORE := binding.NewString()
-	entryLOGIC_CORE := textEntry(RIGHT_WIDTH_ENTRY, strLOGIC_CORE)
-
-	strDISK_TYPE := binding.NewString()
-	entryDISK_TYPE := textEntry(LEFT_WIDTH_ENTRY, strDISK_TYPE)
-	entryDISK_TYPE.Move(fyne.NewPos(63, 0))
-	strDISK_SIZE := binding.NewString()
-	entryDISK_SIZE := textEntry(RIGHT_WIDTH_ENTRY, strDISK_SIZE)
-	entryDISK_SIZE.Move(fyne.NewPos(10, 0))
+	strPatrimonialCode, entryPatrimonialCode := textbox.NewStrPatrimonialCode()
+	strBIOS, entryBIOS := textbox.NewStrBios()
+	strHOSTNAME, entryHOSTNAME := textbox.NewStrHostname()
+	strFACTURER, entryFACTURER := textbox.NewStrFacturer()
+	strMODEL, entryMODEL := textbox.NewStrModel()
+	strARCHITECTURE, entryARCHITECTURE := textbox.NewStrArchitecture()
+	strRAM, entryRAM := textbox.NewStrRam()
+	strPROCESSOR, entryPROCESSOR := textbox.NewStrProcessor()
+	strCORE, entryCORE := textbox.NewStrCore()
+	strLOGIC_CORE, entryLOGIC_CORE := textbox.NewStrLogic()
+	strDISK_TYPE, entryDISK_TYPE := textbox.NewStrDisktype()
+	strDISK_SIZE, entryDISK_SIZE := textbox.NewStrDisksize()
 
 	//buttons to load and send information
-	btnSuccess := widget.NewButtonWithIcon("Enviar Info.", theme.ConfirmIcon(), nil)
-	btnSuccess.Importance = 1
-	btnSuccess.Disable()
+	btnSendInfoApi := widget.NewButtonWithIcon("Enviar Info.", theme.ConfirmIcon(), nil)
+	btnSendInfoApi.Importance = 1
+	btnSendInfoApi.Disable()
+	btnSendInfoApi.OnTapped = func() {
+		var requestPC model.RequestComputer
+		requestPC.Name = "HP pavilion gamer"
 
-	btnLoad := widget.NewButtonWithIcon("Cargar Info.", theme.MediaReplayIcon(), func() {
+		btnSendInfoApi.Disable()
+
+		data, _ := strPatrimonialCode.Get()
+		if data == "" {
+			m := ModalGeneral("Error", "Ingrese Codigo de Patrimonio", w)
+			m.Show()
+			btnSendInfoApi.Enable()
+			return
+		}
+		ok, value := post.SendDataAPI(&requestPC)
+		if !ok {
+			m := ModalGeneral("Error", "Internet not CONNECTED!", w)
+			m.Show()
+			return
+		}
+
+		qrModal := dialog.NewCustom("QR CODE", "Cerrar Ventana", GetCanvasQRCode(value), w)
+		qrModal.Show()
+	}
+
+	btnLoad := widget.NewButtonWithIcon("Cargar Info.", theme.MediaReplayIcon(), nil)
+	btnLoad.OnTapped = func() {
+		btnLoad.Disable()
 		c := entity.NewCommand()
 
 		compSystem := entity.NewComputerSystem(c)
@@ -95,9 +101,8 @@ func Run() {
 		strDISK_TYPE.Set(string(disk.MediaType))
 		strDISK_SIZE.Set(string(disk.Size))
 
-		//data, _ := strBios.Get()
-		btnSuccess.Enable()
-	})
+		btnSendInfoApi.Enable()
+	}
 	btnLoad.Importance = 2
 
 	//header GUI
@@ -111,6 +116,7 @@ func Run() {
 			lblHeader,
 		),
 		container.NewVBox(
+			rowField("Patrimonio", entryPatrimonialCode),
 			rowField("Serial", entryBIOS),
 			rowField("Nombre equipo", entryHOSTNAME),
 			rowField("Fabricante", entryFACTURER),
@@ -132,13 +138,19 @@ func Run() {
 		container.NewCenter(
 			container.NewHBox(
 				btnLoad,
-				btnSuccess,
+				btnSendInfoApi,
 			),
 		),
 	)
 	w.SetContent(mainContainer)
 	w.SetFixedSize(true)
 	w.ShowAndRun()
+}
+
+// ModalGeneral return modal information
+func ModalGeneral(title, info string, parent fyne.Window) dialog.Dialog {
+	render := dialog.NewInformation(title, info, parent)
+	return render
 }
 
 func rowField(lbl string, entry *widget.Entry) *fyne.Container {
@@ -148,11 +160,4 @@ func rowField(lbl string, entry *widget.Entry) *fyne.Container {
 			entry,
 		),
 	)
-}
-func textEntry(sizeWidth float32, str binding.String) *widget.Entry {
-	e := widget.NewEntry()
-	e.Resize(fyne.NewSize(sizeWidth, HEIGHT_ENTRY))
-	e.Bind(str)
-
-	return e
 }

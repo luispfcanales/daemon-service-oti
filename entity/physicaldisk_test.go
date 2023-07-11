@@ -23,9 +23,19 @@ func TestDiskType(t *testing.T) {
 }
 
 func TestDiskSize(t *testing.T) {
+	var gotValue string
 	c := NewCommand()
+
+	afterValue := "Online"
+
 	want := c.GetInfoPOWERSHELL("get-disk")
 	gotRow := strings.Fields(want)
-	sizeGot := len(gotRow) - 3
-	log.Println(gotRow[sizeGot])
+
+	for index, got := range gotRow {
+		if got == afterValue {
+			gotValue = gotRow[index+1]
+			break
+		}
+	}
+	log.Println(gotValue)
 }
