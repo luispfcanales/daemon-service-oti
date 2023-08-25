@@ -25,8 +25,8 @@ type CPUSystem struct {
 	LogicalProcessors CPU_LOGICAL_PROCESSORS_TYPE `json:"logical_processors,omitempty"`
 
 	mailBox        chan interface{} //
-	STOP_ACTOR     chan struct{}    // stop actor
-	PROCESS_END    chan struct{}    // stop load information process
+	stop_actor     chan struct{}    // stop actor
+	process_end    chan struct{}    // stop load information process
 	numberToFinish int
 	exc            Executor
 }
@@ -36,8 +36,8 @@ func NewCPUSystem(executor Executor) *CPUSystem {
 	CPU := &CPUSystem{
 		exc:         executor,
 		mailBox:     make(chan interface{}, 10),
-		STOP_ACTOR:  make(chan struct{}, 1),
-		PROCESS_END: make(chan struct{}),
+		stop_actor:  make(chan struct{}, 1),
+		process_end: make(chan struct{}),
 	}
 	return CPU
 }
@@ -50,15 +50,15 @@ ActorLoop:
 			switch value := valueType.(type) {
 			case CPU_NAME_TYPE:
 				cs.Name = value
-				cs.PROCESS_END <- struct{}{}
+				cs.process_end <- struct{}{}
 			case CPU_NUMBER_CORES_TYPE:
 				cs.Cores = value
-				cs.PROCESS_END <- struct{}{}
+				cs.process_end <- struct{}{}
 			case CPU_LOGICAL_PROCESSORS_TYPE:
 				cs.LogicalProcessors = value
-				cs.PROCESS_END <- struct{}{}
+				cs.process_end <- struct{}{}
 			}
-		case <-cs.STOP_ACTOR:
+		case <-cs.stop_actor:
 			break ActorLoop
 		}
 	}
@@ -70,12 +70,12 @@ func (cs *CPUSystem) stop() {
 ActorStop:
 	for {
 		select {
-		case <-cs.PROCESS_END:
+		case <-cs.process_end:
 			counter++
 			if counter == cs.numberToFinish {
-				cs.STOP_ACTOR <- struct{}{}
-				close(cs.PROCESS_END)
-				close(cs.STOP_ACTOR)
+				cs.stop_actor <- struct{}{}
+				close(cs.process_end)
+				close(cs.stop_actor)
 				break ActorStop
 			}
 		}

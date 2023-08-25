@@ -3,18 +3,22 @@ package gui
 import (
 	"fmt"
 	"image/color"
+	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
 	"github.com/luispfcanales/daemon-service-oti/entity"
 	"github.com/luispfcanales/daemon-service-oti/gui/textbox"
 	"github.com/luispfcanales/daemon-service-oti/model"
 	"github.com/luispfcanales/daemon-service-oti/services/post"
+	"github.com/luispfcanales/daemon-service-oti/services/stream"
 )
 
 const (
@@ -26,7 +30,7 @@ const (
 	RIGHT_WIDTH_ENTRY float32 = 107
 )
 
-func Run() {
+func Run(STREAM_SRV *stream.StreamSrv) {
 	a := app.New()
 	w := a.NewWindow("OTI soporte")
 	w.Resize(fyne.NewSize(WIDTH_WIN, HEIGHT_WIN))
@@ -52,7 +56,21 @@ func Run() {
 	btnSendInfoApi.Disable()
 	btnSendInfoApi.OnTapped = func() {
 		var requestPC model.RequestComputer
-		requestPC.Name = "HP pavilion gamer"
+
+		requestPC.PatrimonialCode, _ = strPatrimonialCode.Get()
+		requestPC.Serial, _ = strBIOS.Get()
+		requestPC.Name, _ = strHOSTNAME.Get()
+		requestPC.Maker, _ = strFACTURER.Get()
+		requestPC.Model, _ = strMODEL.Get()
+		requestPC.Architecture, _ = strARCHITECTURE.Get()
+		requestPC.Ram, _ = strRAM.Get()
+		requestPC.Processor, _ = strPROCESSOR.Get()
+		requestPC.Core, _ = strCORE.Get()
+		requestPC.LogicalCore, _ = strLOGIC_CORE.Get()
+		requestPC.SizeDisk, _ = strDISK_SIZE.Get()
+		requestPC.Disk, _ = strDISK_TYPE.Get()
+
+		log.Println(requestPC)
 
 		btnSendInfoApi.Disable()
 
@@ -102,6 +120,8 @@ func Run() {
 		strDISK_SIZE.Set(string(disk.Size))
 
 		btnSendInfoApi.Enable()
+
+		//a.SendNotification()
 	}
 	btnLoad.Importance = 2
 
@@ -144,7 +164,27 @@ func Run() {
 	)
 	w.SetContent(mainContainer)
 	w.SetFixedSize(true)
-	w.ShowAndRun()
+
+	icon, err := fyne.LoadResourceFromPath("logo-unamad.png")
+	if err != nil {
+		panic("no se cargo el icono")
+	}
+	w.SetIcon(icon)
+
+	if desk, ok := a.(desktop.App); ok {
+		m := fyne.NewMenu("Myapp",
+			fyne.NewMenuItem("Show", func() {
+				w.Show()
+			}))
+		desk.SetSystemTrayMenu(m)
+		desk.SetSystemTrayIcon(icon)
+	}
+
+	w.SetCloseIntercept(func() {
+		w.Hide()
+	})
+	//w.ShowAndRun()
+	a.Run()
 }
 
 // ModalGeneral return modal information

@@ -26,8 +26,8 @@ type PhysicalDisk struct {
 	Size      PD_SIZE_TYPE  `json:"size,omitempty"`
 
 	mailBox         chan interface{}
-	STOP_ACTOR      chan struct{}
-	PROCESS_END     chan struct{}
+	stop_actor      chan struct{}
+	process_end     chan struct{}
 	process_workers int
 	exc             Executor
 }
@@ -37,18 +37,18 @@ func NewPhysicalDisk(executor Executor) *PhysicalDisk {
 	return &PhysicalDisk{
 		exc:         executor,
 		mailBox:     make(chan interface{}, 10),
-		STOP_ACTOR:  make(chan struct{}, 1),
-		PROCESS_END: make(chan struct{}),
+		stop_actor:  make(chan struct{}, 1),
+		process_end: make(chan struct{}),
 	}
 }
 func (p *PhysicalDisk) receiver(message interface{}) {
 	switch valueType := message.(type) {
 	case PD_SIZE_TYPE:
 		p.Size = valueType
-		p.PROCESS_END <- struct{}{}
+		p.process_end <- struct{}{}
 	case PD_MEDIA_TYPE:
 		p.MediaType = valueType
-		p.PROCESS_END <- struct{}{}
+		p.process_end <- struct{}{}
 	}
 }
 
@@ -58,7 +58,7 @@ actorLoop:
 		select {
 		case m := <-p.mailBox:
 			p.receiver(m)
-		case <-p.STOP_ACTOR:
+		case <-p.stop_actor:
 			break actorLoop
 		}
 	}
@@ -68,10 +68,10 @@ func (p *PhysicalDisk) stop() {
 loop:
 	for {
 		select {
-		case <-p.PROCESS_END:
+		case <-p.process_end:
 			counter++
 			if p.process_workers == counter {
-				p.STOP_ACTOR <- struct{}{}
+				p.stop_actor <- struct{}{}
 				break loop
 			}
 		}

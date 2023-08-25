@@ -15,8 +15,8 @@ type Bios struct {
 	SerialNumber SERIAL_NUMBER_TYPE `json:"serial_number,omitempty"`
 
 	mailBox         chan interface{}
-	STOP_ACTOR      chan struct{}
-	PROCESS_END     chan struct{}
+	stop_actor      chan struct{}
+	process_end     chan struct{}
 	process_workers int
 	exc             Executor
 }
@@ -25,15 +25,15 @@ func NewBios(executor Executor) *Bios {
 	return &Bios{
 		exc:         executor,
 		mailBox:     make(chan interface{}, 10),
-		STOP_ACTOR:  make(chan struct{}, 1),
-		PROCESS_END: make(chan struct{}),
+		stop_actor:  make(chan struct{}, 1),
+		process_end: make(chan struct{}),
 	}
 }
 func (b *Bios) receiver(message interface{}) {
 	switch valueType := message.(type) {
 	case SERIAL_NUMBER_TYPE:
 		b.SerialNumber = valueType
-		b.PROCESS_END <- struct{}{}
+		b.process_end <- struct{}{}
 	}
 }
 
@@ -43,7 +43,7 @@ actorLoop:
 		select {
 		case m := <-p.mailBox:
 			p.receiver(m)
-		case <-p.STOP_ACTOR:
+		case <-p.stop_actor:
 			break actorLoop
 		}
 	}
@@ -53,10 +53,10 @@ func (b *Bios) stop() {
 loop:
 	for {
 		select {
-		case <-b.PROCESS_END:
+		case <-b.process_end:
 			counter++
 			if b.process_workers == counter {
-				b.STOP_ACTOR <- struct{}{}
+				b.stop_actor <- struct{}{}
 				break loop
 			}
 		}
