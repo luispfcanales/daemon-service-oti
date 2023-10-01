@@ -5,7 +5,12 @@ import (
 	"github.com/luispfcanales/daemon-service-oti/services/stream"
 )
 
+const (
+	IP      string = "192.168.0.10"
+	PORT_IP string = ":3000"
+)
+
 func main() {
-	streaming := stream.NewStreamWS("ws://40.0.2.2:3000/stream/desktop/computer/%s", "http://40.0.2.2")
+	streaming := stream.NewStreamWS("ws://"+IP+PORT_IP+"/stream/desktop/computer/%s", "http://"+IP)
 	gui.Run(streaming)
 }

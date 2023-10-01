@@ -64,18 +64,10 @@ actorLoop:
 	}
 }
 func (p *PhysicalDisk) stop() {
-	var counter int
-loop:
-	for {
-		select {
-		case <-p.process_end:
-			counter++
-			if p.process_workers == counter {
-				p.stop_actor <- struct{}{}
-				break loop
-			}
-		}
+	for i := 0; i < p.process_workers; i++ {
+		<-p.process_end
 	}
+	p.stop_actor <- struct{}{}
 }
 
 func (p *PhysicalDisk) WorkerLoadInfo(wg *sync.WaitGroup) {

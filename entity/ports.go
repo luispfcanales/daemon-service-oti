@@ -9,5 +9,5 @@ type Executor interface {
 
 type Loader interface {
 	WorkerLoadInfo(*sync.WaitGroup)
-	PrintInfo()
+	//PrintInfo()
 }

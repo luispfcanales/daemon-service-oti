@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"log"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -23,7 +23,7 @@ func TestDiskType(t *testing.T) {
 }
 
 func TestDiskSize(t *testing.T) {
-	var gotValue string
+	var gotValue string = ""
 	c := NewCommand()
 
 	afterValue := "Online"
@@ -37,5 +37,9 @@ func TestDiskSize(t *testing.T) {
 			break
 		}
 	}
-	log.Println(gotValue)
+
+	_, err := strconv.ParseFloat(gotValue, 64)
+	if err != nil {
+		t.Fail()
+	}
 }

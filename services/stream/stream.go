@@ -28,19 +28,19 @@ type StreamSrv struct {
 	errorChan     chan error
 }
 
-var (
-	EVENT_NOTIFICATION string = "notify"
-	EVENT_LOAD_INFO    string = "load-info-system"
-
-	EVENT_LOADED string = "loaded-info"
+const (
+	EVENT_NOTIFICATION uint8 = 1 + iota //"notify"
+	EVENT_LOAD_INFO                     //"load-info-system"
+	EVENT_LOADED
 )
+const retryConnection time.Duration = 7 * time.Second
 
 func NewStreamWS(UrlWebsocket, UrlOrigin string) *StreamSrv {
 	srv := &StreamSrv{
 		ID:            uuid.New().String(),
 		urlWS:         UrlWebsocket,
 		origin:        UrlOrigin,
-		tryConnection: time.NewTicker(time.Second * 7),
+		tryConnection: time.NewTicker(retryConnection),
 		mailBox:       make(chan []byte, 10),
 		signalConnect: make(chan struct{}, 1),
 		errorChan:     make(chan error, 1),
@@ -82,7 +82,7 @@ func (st *StreamSrv) emitNotification() {
 		AppID:    "UNAMAD",
 		Title:    "Notification",
 		Icon:     fullpath,
-		Message:  "Se conecto al servicio de Comandos UNAMAD",
+		Message:  "Se conecto al servicio UNAMAD",
 		Duration: toast.Long,
 	}
 
@@ -155,7 +155,7 @@ func (st *StreamSrv) ReadLoop() {
 		n, err := st.ws.Read(buf)
 		if err != nil {
 			if opErr, _ := err.(*net.OpError); opErr.Err.Error() == ErrorForciblyClosed {
-				st.tryConnection.Reset(time.Second * 7)
+				st.tryConnection.Reset(retryConnection)
 				break
 			}
 			if err == io.EOF {
